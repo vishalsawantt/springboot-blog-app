@@ -1,0 +1,7 @@
+# Treat HTML, CSS, and JS as documentation so they're not counted in language stats
+*.html linguist-documentation
+*.css linguist-documentation
+*.js linguist-documentation
+
+# Force GitHub to recognize Java as the main language
+*.java linguist-language=Java
