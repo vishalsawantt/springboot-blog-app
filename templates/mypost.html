@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>My Posts</title>
+<link rel="stylesheet"
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<link rel="stylesheet"
+	href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+</head>
+<body style="background-color: #f3f2ef;">
+	<!-- Light background like dashboard -->
+
+	<div class="container d-flex justify-content-center mt-4">
+		<div class="col-lg-8 col-md-10 col-sm-12">
+			<h2 class="mb-4 text-center">My Posts</h2>
+
+			<!-- Loop through posts -->
+			<div th:each="post : ${myPosts}"
+				class="card mb-4 shadow-sm p-4 border-0"
+				th:attr="data-post-id=${post.postId}, data-post-owner-id=${post.user.id}"
+				style="border-radius: 16px; background-color: #ffffff;">
+
+
+				<!-- Post Title -->
+				<h5 class="text-dark fw-semibold mb-2" th:text="${post.title}">Post
+					Title</h5>
+
+				<input type="hidden" id="logged-in-user-id" th:value="${userId}" />
+
+				<!-- Content -->
+				<p class="text-body" style="font-size: 1rem; line-height: 1.6;"
+					th:text="${post.content}">Post Content</p>
+
+				<!-- Image -->
+				<div th:if="${post.image != null}" class="mb-3">
+					<img th:src="@{'/api/posts/images/' + ${post.postId}}"
+						class="img-fluid rounded shadow-sm"
+						style="width: 100%; height: auto;">
+				</div>
+
+				<!-- Like Section -->
+				<div class="mt-3 d-flex align-items-center gap-2">
+					<i th:id="'like-icon-' + ${post.postId}"
+						class="bi bi-heart text-secondary fs-5" style="cursor: pointer;"
+						th:onclick="'toggleLike(' + ${post.postId} + ', ' + ${userId} + ')'"></i>
+					<span th:id="'like-count-' + ${post.postId}">0</span> Likes
+				</div>
+
+
+				<!-- Buttons -->
+				<div class="d-flex gap-2 mt-3 flex-wrap">
+					<a
+						th:href="@{'/updatepost/' + ${post.postId} + '?userId=' + ${userId}}"
+						class="btn btn-warning rounded-pill px-3"> <i
+						class="bi bi-pencil-square me-1"></i> Update
+					</a> <a href="#"
+						th:onclick="'deletePost(' + ${post.postId} + ',' + ${userId} + ')'"
+						class="btn btn-danger rounded-pill px-3"> <i
+						class="bi bi-trash3-fill me-1"></i> Delete
+					</a>
+				</div>
+
+
+
+				<div class="mt-4">
+					<strong class="text-muted"> <i
+						class="bi bi-chat-left-dots me-1"></i> Comments:
+					</strong>
+					<ul th:id="'comments-container-' + ${post.postId}"
+						class="list-group mt-2">
+						<!-- Comments injected here -->
+					</ul>
+				</div>
+
+				<button th:onclick="'loadComments(' + ${post.postId} + ', false)'"
+					class="btn btn-primary mt-2"
+					th:id="'load-more-btn-' + ${post.postId}">Load More
+					Comments</button>
+
+			</div>
+		</div>
+	</div>
+
+</body>
+
+<script>
+    function deletePost(postId, userId) {
+        if (!confirm("Are you sure you want to delete this post?")) {
+            return;
+        }
+
+        fetch('/api/posts/delete/' + postId, {
+            method: 'DELETE'
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Post deleted successfully');
+                window.location.href = '/mypost?userId=' + userId;
+            } else {
+                alert('Failed to delete the post');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting post:', error);
+            alert('An error occurred');
+        });
+    }
+    
+    
+
+	const commentPageMap = {}; // Track page for each post
+	
+	function escapeForJs(str) {
+	    return str.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+	}
+	
+	// Auto-load initial comments for each post on page load
+	document.addEventListener("DOMContentLoaded", function () {
+	    document.querySelectorAll("[id^='comments-container-']").forEach(div => {
+	        const postId = div.id.split("-")[2];
+	        loadComments(postId);
+	    });
+	});
+
+
+	function loadComments(postId, resetPage = true) {
+	    if (resetPage) {
+	        commentPageMap[postId] = 0;
+	    } else if (!commentPageMap[postId]) {
+	        commentPageMap[postId] = 0;
+	    }
+
+	    fetch(`/api/comment/by-post/${postId}?page=${commentPageMap[postId]}&size=5`)
+	        .then(res => res.json())
+	        .then(data => {
+	            const commentList = document.getElementById(`comments-container-${postId}`);
+	            const loggedInUserId = document.getElementById('logged-in-user-id').value; // Don't parse
+
+	            if (resetPage) {
+	                commentList.innerHTML = '';
+	            }
+
+	            data.content.forEach(comment => {
+	                const li = document.createElement('li');
+	                li.className = "list-group-item";
+
+	                // Header: Name and Date
+	                const header = document.createElement('div');
+	                header.className = "d-flex justify-content-between align-items-center";
+
+	                const commenterName = document.createElement('span');
+	                commenterName.className = "fw-semibold";
+	                commenterName.textContent = comment.user?.name || "Anonymous";
+
+	                const createdAt = new Date(comment.createdAt);
+	                const formattedDate = createdAt.toLocaleString('en-US', {
+	                    year: 'numeric',
+	                    month: 'short',
+	                    day: 'numeric',
+	                    hour: 'numeric',
+	                    minute: '2-digit',
+	                    hour12: true
+	                });
+
+	                const dateElement = document.createElement('small');
+	                dateElement.className = "text-muted";
+	                dateElement.textContent = formattedDate;
+
+	                header.appendChild(commenterName);
+	                header.appendChild(dateElement);
+
+	                const commentText = document.createElement('div');
+	                commentText.className = "mt-1 mb-2";
+	                commentText.textContent = comment.comment;
+
+	                const buttonGroup = document.createElement('div');
+	                buttonGroup.classList.add("text-end");
+
+	                const postCard = document.querySelector(`[data-post-id='${postId}']`);
+	                const postOwnerId = postCard.getAttribute("data-post-owner-id");
+
+	                if (comment.user && (String(comment.user.id) === loggedInUserId || loggedInUserId === postOwnerId)) {
+	                    buttonGroup.innerHTML = `
+	                        <button class="btn btn-sm btn-danger"
+	                            onclick="deleteComment(${comment.commentId}, ${postId})">Delete</button>
+	                    `;
+	                }
+
+	                li.appendChild(header);
+	                li.appendChild(commentText);
+	                li.appendChild(buttonGroup);
+	                commentList.appendChild(li);
+	            });
+
+	            const loadMoreBtn = document.getElementById(`load-more-btn-${postId}`);
+	            if (data.last) {
+	                if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+	            } else {
+	                commentPageMap[postId]++;
+	                if (loadMoreBtn) loadMoreBtn.style.display = 'block';
+	            }
+	        })
+	        .catch(err => console.error("Error loading comments:", err));
+	}
+
+    function deleteComment(commentId, postId) {
+        if (!confirm("Delete this comment?")) return;
+
+        fetch(`/api/comment/delete/${commentId}`, { method: 'DELETE' })
+            .then(response => {
+                if (response.ok) {
+                    alert("Comment deleted");
+                    loadComments(postId);  // Refresh comments
+                } else {
+                    alert("Failed to delete comment");
+                }
+            })
+            .catch(error => {
+                console.error("Error deleting comment:", error);
+                alert("Something went wrong");
+            });
+    }
+    
+ // Like toggling
+    function toggleLike(postId, userId) {
+        fetch(`/api/likes/toggle?postId=${postId}&userId=${userId}`, { method: 'POST' })
+            .then(() => loadLikeStatus(postId, userId))
+            .catch(err => console.error("Like toggle failed:", err));
+    }
+
+ 
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll("[id^='comments-container-']").forEach(div => {
+            const postId = div.id.split("-")[2];
+            loadComments(postId);
+        });
+
+        document.querySelectorAll("[data-post-id]").forEach(card => {
+            const postId = card.getAttribute("data-post-id");
+            const userId = document.getElementById("logged-in-user-id").value;
+            loadLikeStatus(postId, userId);
+        });
+    });
+
+    // Load like count & status
+    function loadLikeStatus(postId, userId) {
+        fetch(`/api/likes/status?postId=${postId}&userId=${userId}`)
+            .then(res => res.json())
+            .then(data => {
+                const icon = document.getElementById(`like-icon-${postId}`);
+                const count = document.getElementById(`like-count-${postId}`);
+
+                if (icon && count) {
+                    icon.className = data.liked ? 'bi bi-heart-fill text-danger fs-5' : 'bi bi-heart text-secondary fs-5';
+                    count.innerText = data.likeCount ?? 0;
+                }
+            })
+            .catch(err => console.error("Error loading like status:", err));
+    }
+
+</script>
+
+</html>

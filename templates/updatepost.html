@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>Update Post</title>
+<meta charset="UTF-8">
+</head>
+<body>
+	<h2>Update Post</h2>
+
+	<input type="hidden" id="postId" th:value="${post.postId}" />
+	<input type="hidden" id="userId" th:value="${userId}" />
+
+	<label>Title:</label>
+	<input type="text" id="title" th:value="${post.title}" required />
+	<br />
+
+	<label>Content:</label>
+	<textarea id="content" required th:text="${post.content}"></textarea>
+	<br />
+
+	<label>Current Image:</label>
+	<br />
+	<img th:src="@{'/api/posts/images/' + ${post.postId}}"
+		style="max-width: 300px;" />
+	<br />
+
+	<button onclick="updatePost()">Update</button>
+
+	<script>
+        function updatePost() {
+            const postId = document.getElementById("postId").value;
+            const userId = document.getElementById("userId").value;
+            const title = document.getElementById("title").value;
+            const content = document.getElementById("content").value;
+
+            fetch(`/api/posts/update?postId=${postId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ title: title, content: content })
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = `/mypost?userId=${userId}`;
+                } else {
+                    alert("Failed to update post.");
+                }
+            });
+        }
+    </script>
+</body>
+</html>
