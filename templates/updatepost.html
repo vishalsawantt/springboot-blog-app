@@ -1,32 +1,96 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-<title>Update Post</title>
-<meta charset="UTF-8">
+    <title>Update Post</title>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f6fc;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background-color: #ffffff;
+            padding: 30px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 12px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        label {
+            font-weight: bold;
+            color: #555;
+            display: block;
+            margin-top: 15px;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+
+        textarea {
+            resize: vertical;
+            height: 120px;
+        }
+
+        img {
+            display: block;
+            margin: 15px auto;
+            max-width: 100%;
+            border-radius: 10px;
+        }
+
+        button {
+            display: block;
+            margin: 25px auto 0;
+            background-color: #6c63ff;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #5a54e6;
+        }
+    </style>
 </head>
 <body>
-	<h2>Update Post</h2>
+    <div class="container">
+        <h2>Update Post</h2>
 
-	<input type="hidden" id="postId" th:value="${post.postId}" />
-	<input type="hidden" id="userId" th:value="${userId}" />
+        <input type="hidden" id="postId" th:value="${post.postId}" />
+        <input type="hidden" id="userId" th:value="${userId}" />
 
-	<label>Title:</label>
-	<input type="text" id="title" th:value="${post.title}" required />
-	<br />
+        <label>Title:</label>
+        <input type="text" id="title" th:value="${post.title}" required />
 
-	<label>Content:</label>
-	<textarea id="content" required th:text="${post.content}"></textarea>
-	<br />
+        <label>Content:</label>
+        <textarea id="content" required th:text="${post.content}"></textarea>
 
-	<label>Current Image:</label>
-	<br />
-	<img th:src="@{'/api/posts/images/' + ${post.postId}}"
-		style="max-width: 300px;" />
-	<br />
+        <label>Current Image:</label>
+        <img th:src="@{'/api/posts/images/' + ${post.postId}}" />
 
-	<button onclick="updatePost()">Update</button>
+        <button onclick="updatePost()">Update</button>
+    </div>
 
-	<script>
+    <script>
         function updatePost() {
             const postId = document.getElementById("postId").value;
             const userId = document.getElementById("userId").value;
