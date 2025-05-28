@@ -20,6 +20,9 @@ Here are a few screenshots of the application in action:
 ###### ✍️ Create Blog Post  
 <img src="https://github.com/user-attachments/assets/1fba491b-067c-447c-8dc1-4d54f1b41a30" width="600"/>
 
+###### 🏠 Update Post  
+<img src="https://github.com/user-attachments/assets/a8207caa-fe07-4dc3-9a97-6944c5c817ec" width="600"/>
+
 ###### 📋 All Posts  
 <img src="https://github.com/user-attachments/assets/0f77464f-5963-4aa6-b2b7-b16e9105d639" width="600"/>
 
